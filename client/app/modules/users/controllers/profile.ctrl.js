@@ -1,54 +1,50 @@
 'use strict';
 angular.module('com.module.users')
-  .controller('ProfileCtrl', function ($scope, User, toasty, gettextCatalog) {
+  .controller('ProfileCtrl', function($scope, CoreService, User, gettextCatalog) {
 
-    $scope.user = User.getCurrent(function (user) {
+    $scope.user = User.getCurrent(function(user) {
       console.log(user);
-    }, function (err) {
+    }, function(err) {
       console.log(err);
     });
 
     $scope.formFields = [{
       key: 'username',
       type: 'text',
-      label: 'Username',
+      label: gettextCatalog.getString('Username'),
       required: true
     }, {
       key: 'email',
       type: 'email',
-      label: 'E-mail',
+      label: gettextCatalog.getString('E-mail'),
       required: true
     }, {
       key: 'firstName',
       type: 'text',
-      label: 'First name',
+      label: gettextCatalog.getString('First name'),
       required: true
     }, {
       key: 'lastName',
       type: 'text',
-      label: 'Last name',
+      label: gettextCatalog.getString('Last name'),
       required: true
     }];
 
     $scope.formOptions = {
       uniqueFormId: true,
       hideSubmit: false,
-      submitCopy: 'Save'
+      submitCopy: gettextCatalog.getString('Save')
     };
 
-    $scope.onSubmit = function () {
-      User.upsert($scope.user, function () {
-        toasty.pop.success({
-          title: gettextCatalog.getString('Profile saved'),
-          msg: gettextCatalog.getString('Enjoy the new you!'),
-          sound: false
-        });
-      }, function (err) {
-        toasty.pop.error({
-          title: gettextCatalog.getString('Error saving profile'),
-          msg: gettextCatalog.getString('Your profile is not saved: ') + err,
-          sound: false
-        });
+    $scope.onSubmit = function() {
+      User.upsert($scope.user, function() {
+        CoreService.toastSuccess(gettextCatalog.getString(
+          'Profile saved'), gettextCatalog.getString(
+          'Enjoy the new you!'));
+      }, function(err) {
+        CoreService.toastError(gettextCatalog.getString(
+          'Error saving profile'), gettextCatalog.getString(
+          'Your profile is not saved: ') + err);
       });
     };
 

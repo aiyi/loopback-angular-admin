@@ -11,7 +11,7 @@ angular.module('com.module.sandbox')
       .state('app.sandbox.index', {
         url: '',
         controller: function($state) {
-          $state.go('app.sandbox.alerts');
+          $state.go('app.sandbox.autofields');
         }
       })
       .state('app.sandbox.forms', {
@@ -19,10 +19,20 @@ angular.module('com.module.sandbox')
         templateUrl: 'modules/sandbox/views/forms.html',
         controller: 'SandboxFormsCtrl'
       })
-      .state('app.sandbox.alerts', {
-        url: '/alerts',
-        templateUrl: 'modules/sandbox/views/alerts.html',
-        controller: 'SandboxAlertsCtrl'
+      .state('app.sandbox.icons', {
+        url: '/icons',
+        templateUrl: 'modules/sandbox/views/icons.html',
+        controller: 'SandboxIconsCtrl'
+      })
+      .state('app.sandbox.faker', {
+        url: '/faker',
+        templateUrl: 'modules/sandbox/views/faker.html',
+        controller: 'SandboxFakerCtrl'
+      })
+      .state('app.sandbox.coreservice', {
+        url: '/coreservice',
+        templateUrl: 'modules/sandbox/views/coreservice.html',
+        controller: 'SandboxCoreServiceCtrl'
       })
       .state('app.sandbox.bootstrap', {
         url: '/bootstrap',

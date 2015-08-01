@@ -1,8 +1,9 @@
 'use strict';
 
-module.exports = function (app) {
+module.exports = function(app) {
 
   var bodyParser = require('body-parser');
+  var loopback = require('loopback');
 
   // to support JSON-encoded bodies
   app.use(bodyParser.json());
@@ -11,14 +12,14 @@ module.exports = function (app) {
     extended: true
   }));
 
-  // The access token is only available after boot
+  //// The access token is only available after boot
   app.use(app.loopback.token({
     model: app.models.accessToken
   }));
 
-  // Enable http session
-  app.use(app.loopback.session({
-    secret: 'kitty',
+  app.use(loopback.cookieParser(app.get('cookieSecret')));
+  app.use(loopback.session({
+    secret: app.get('cookieSecret'),
     saveUninitialized: true,
     resave: true
   }));
@@ -27,8 +28,11 @@ module.exports = function (app) {
   try {
     config = require('../../providers.json');
   } catch (err) {
-    console.error('Please configure your passport strategy in `providers.json`.');
-    console.error('Copy `providers.json.template` to `providers.json` and replace the clientID/clientSecret values with your own.');
+    console.error(
+      'Please configure your passport strategy in `providers.json`.');
+    console.error(
+      'Copy `providers.json.template` to `providers.json` and replace the clientID/clientSecret values with your own.'
+    );
   }
 
 
@@ -36,9 +40,7 @@ module.exports = function (app) {
     console.log('Configuring passport');
 
     var AuthProvider = app.models.AuthProvider;
-
     var loopbackPassport = require('loopback-component-passport');
-
     var PassportConfigurator = loopbackPassport.PassportConfigurator;
     var passportConfigurator = new PassportConfigurator(app);
 
@@ -72,7 +74,7 @@ module.exports = function (app) {
           class: providerClass
         };
 
-        AuthProvider.create(entry, function (err, data) {
+        AuthProvider.create(entry, function(err, data) {
           if (err) {
             console.log(err);
           }
@@ -88,25 +90,25 @@ module.exports = function (app) {
 
   var ensureLoggedIn = require('connect-ensure-login').ensureLoggedIn;
 
-  app.get('/auth/account', ensureLoggedIn('/login.html'), function (req, res, next) {
-    res.render('pages/loginProfiles', {
-      user: req.user,
-      url: req.url
-    });
+  app.get('/auth/account', ensureLoggedIn('/'), function(req, res, next) {
+    console.log('Logged in', req.user)
+    res.redirect('/#/app');
   });
 
-  app.get('/link/account', ensureLoggedIn('/login.html'), function (req, res, next) {
-    res.render('pages/linkedAccounts', {
-      user: req.user,
-      url: req.url
-    });
+  app.get('/auth/current', function(req, res, next) {
+    if (!req.isAuthenticated || !req.isAuthenticated()) {
+      return res.status(200).json({});
+    }
+    //poor man's copy
+    var ret = JSON.parse(JSON.stringify(req.user));
+    delete ret.password;
+    res.status(200).json(ret);
   });
 
-  app.get('/auth/logout', function (req, res, next) {
+  app.get('/auth/logout', function(req, res, next) {
     req.logout();
     res.redirect('/');
   });
 
 
-}
-;
+};

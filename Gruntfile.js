@@ -24,6 +24,10 @@ module.exports = function (grunt) {
       development: 'http://0.0.0.0:3000/api/',
       production: '/api/'
     },
+    site: {
+      development: 'http://0.0.0.0:3000',
+      production: ''
+    },
     host: '0.0.0.0'
   };
 
@@ -39,6 +43,7 @@ module.exports = function (grunt) {
         files: {
           'po/template.pot': [
             '<%= yeoman.app %>/modules/**/*.js',
+            '<%= yeoman.app %>/modules/**/**/*.js',
             '<%= yeoman.app %>/modules/*/views/*.html',
             '<%= yeoman.app %>/modules/*/views/**/*.html'
           ]
@@ -93,6 +98,7 @@ module.exports = function (grunt) {
         },
         files: [
           '<%= yeoman.app %>/{,*/}*.html',
+          '<%= yeoman.app %>/**/{,*/}*.html',
           '.tmp/css/{,*/}*.css',
           '<%= yeoman.app %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}'
         ]
@@ -118,7 +124,8 @@ module.exports = function (grunt) {
         constants: {
           ENV: {
             name: 'development',
-            apiUrl: '<%= yeoman.api.development %>'
+            apiUrl: '<%= yeoman.api.development %>',
+            siteUrl: '<%= yeoman.site.development %>'
           }
         }
       },
@@ -129,7 +136,8 @@ module.exports = function (grunt) {
         constants: {
           ENV: {
             name: 'production',
-            apiUrl: '<%= yeoman.api.production %>'
+            apiUrl: '<%= yeoman.api.production %>',
+            siteUrl: '<%= yeoman.site.production %>'
           }
         }
       }
@@ -567,6 +575,26 @@ module.exports = function (grunt) {
           ]
         }
       ]
+    },
+
+    "jsbeautifier": {
+      "default": {
+        src: [
+          "client/app/js/app.js",
+          "client/app/modules/**/*.js",
+          "common/**/*.js",
+          "server/**/*.js"
+        ],
+        options: {
+          config: '.jsbeautifyrc'
+        }
+      },
+      "git-pre-commit": {
+        src: ["src/**/*.js"],
+        options: {
+          mode: "VERIFY_ONLY"
+        }
+      }
     }
 
   });
@@ -583,6 +611,7 @@ module.exports = function (grunt) {
 
     grunt.task.run([
       'clean:server',
+      'api',
       'includeSource:server',
       'ngconstant:development',
       'loopback_sdk_angular:development',
@@ -594,10 +623,23 @@ module.exports = function (grunt) {
     ]);
   });
 
+  var nodemon = require('gulp-nodemon');
+
+  grunt.registerTask('api', function () {
+    nodemon({
+      script: 'server/server.js',
+      ext: 'js json'
+    })
+  });
+
   grunt.registerTask('server', 'DEPRECATED TASK. Use the "serve" task instead', function (target) {
     grunt.log.warn('The `server` task has been deprecated. Use `grunt serve` to start a server.');
     grunt.task.run(['serve:' + target]);
   });
+
+  grunt.registerTask('format', [
+    'jsbeautifier:default'
+  ]);
 
   grunt.registerTask('test', [
     'clean:server',
@@ -610,6 +652,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask('build', [
     'clean:dist',
+    'test',
     'ngconstant:production',
     'loopback_sdk_angular:production',
     'includeSource:dist',
@@ -643,6 +686,15 @@ module.exports = function (grunt) {
     'ngconstant:development',
     'loopback_sdk_angular:development',
     'docular'
+  ]);
+
+  grunt.registerTask('gettext', [
+    'nggettext_extract',
+    'nggettext_compile',
+  ]);
+
+  grunt.registerTask('includesource', [
+    'includeSource:server'
   ]);
 
 };

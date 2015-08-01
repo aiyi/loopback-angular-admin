@@ -1,7 +1,8 @@
 'use strict';
 var app = angular.module('com.module.users');
 
-app.controller('UsersCtrl', function ($scope, $stateParams, $state, User, toasty, SweetAlert, gettextCatalog) {
+app.controller('UsersCtrl', function($scope, $stateParams, $state, CoreService,
+  User, gettextCatalog) {
 
 
   if ($stateParams.id) {
@@ -10,43 +11,36 @@ app.controller('UsersCtrl', function ($scope, $stateParams, $state, User, toasty
         where: {
           id: $stateParams.id
         },
-        include: ['roles']
+        include: ['roles', 'identities', 'credentials', 'accessTokens']
       }
-    }, function (result) {
+    }, function(result) {
       $scope.user = result;
-    }, function (err) {
+    }, function(err) {
       console.log(err);
     });
   } else {
     $scope.user = {};
   }
 
-
-  $scope.delete = function (id) {
-    SweetAlert.swal({
-      title: 'Are you sure?',
-      type: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#DD6B55'
-    }, function (isConfirm) {
-      if (isConfirm) {
-        User.deleteById(id, function () {
-            toasty.pop.success({
-              title: gettextCatalog.getString('User deleted'),
-              msg: gettextCatalog.getString('Your user is deleted!'), sound: false
-            });
+  $scope.delete = function(id) {
+    CoreService.confirm(gettextCatalog.getString('Are you sure?'),
+      gettextCatalog.getString('Deleting this cannot be undone'),
+      function() {
+        User.deleteById(id, function() {
+            CoreService.toastSuccess(gettextCatalog.getString(
+              'User deleted'), gettextCatalog.getString(
+              'Your user is deleted!'));
             $state.go('app.users.list');
           },
-          function (err) {
-            toasty.pop.error({
-              title: gettextCatalog.getString('Error deleting user'),
-              msg: gettextCatalog.getString('Your user is not deleted:') + err, sound: false
-            });
+          function(err) {
+            CoreService.toastError(gettextCatalog.getString(
+              'Error deleting user'), gettextCatalog.getString(
+              'Your user is not deleted:' + err));
           });
-      } else {
+      },
+      function() {
         return false;
-      }
-    });
+      });
   };
 
   $scope.loading = true;
@@ -54,53 +48,47 @@ app.controller('UsersCtrl', function ($scope, $stateParams, $state, User, toasty
     filter: {
       include: ['roles']
     }
-  }, function () {
+  }, function() {
     $scope.loading = false;
   });
 
-  $scope.onSubmit = function () {
-    User.upsert($scope.user, function () {
-      toasty.pop.success({
-        title: gettextCatalog.getString('User saved'),
-        msg: gettextCatalog.getString('This user is save!'),
-        sound: false
-      });
+  $scope.onSubmit = function() {
+    User.upsert($scope.user, function() {
+      CoreService.toastSuccess(gettextCatalog.getString('User saved'),
+        gettextCatalog.getString('This user is save!'));
       $state.go('^.list');
-    }, function (err) {
-      toasty.pop.error({
-        title: gettextCatalog.getString('Error saving user'),
-        msg: err,
-        sound: false
-      });
+    }, function(err) {
+      CoreService.toastError(gettextCatalog.getString(
+        'Error saving user: ', +err));
     });
   };
 
   $scope.formFields = [{
     key: 'username',
     type: 'text',
-    label: 'Username',
+    label: gettextCatalog.getString('Username'),
     required: true
   }, {
     key: 'email',
     type: 'email',
-    label: 'E-mail',
+    label: gettextCatalog.getString('E-mail'),
     required: true
   }, {
     key: 'firstName',
     type: 'text',
-    label: 'First name',
+    label: gettextCatalog.getString('First name'),
     required: true
   }, {
     key: 'lastName',
     type: 'text',
-    label: 'Last name',
+    label: gettextCatalog.getString('Last name'),
     required: true
   }];
 
   $scope.formOptions = {
     uniqueFormId: true,
     hideSubmit: false,
-    submitCopy: 'Save'
+    submitCopy: gettextCatalog.getString('Save')
   };
 
 });

@@ -1,62 +1,20 @@
 'use strict';
-angular.module ('com.module.notes')
-  .controller ('NotesCtrl', function ($scope, $state, $stateParams, toasty, Note, SweetAlert) {
+var app = angular.module('com.module.notes');
 
-  var noteId = $stateParams.id;
+app.controller('NotesCtrl', function($scope, $state, $stateParams, NotesService,
+  gettextCatalog) {
 
-  if (noteId) {
-    $scope.note = Note.findById ({
-      id: noteId
-    }, function () {
-    }, function (err) {
-      console.log (err);
-    });
-  } else {
-    $scope.note = {};
-  }
-
-  function loadItems () {
-    $scope.notes = Note.find ();
-  }
-
-  loadItems ();
-
-  $scope.delete = function (id) {
-    SweetAlert.swal ({
-      title: 'Are you sure?',
-      type: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#DD6B55'
-    }, function (isConfirm) {
-      if (isConfirm) {
-        Note.deleteById (id, function () {
-          toasty.pop.success ({title: 'Note deleted', msg: 'Your note is deleted!', sound: false});
-          loadItems ();
-          $state.go ('app.notes.list');
-          console.log ();
-        }, function (err) {
-          toasty.pop.error ({title: 'Error deleting note', msg: 'Your note is not deleted: ' + err, sound: false});
-        });
-      } else {
-        return false;
-      }
-    });
-  };
-
-  $scope.formFields = [
-    {
-      key: 'title',
-      type: 'text',
-      label: 'Title',
-      required: true
-    },
-    {
-      key: 'body',
-      type: 'text',
-      label: 'Body',
-      required: true
-    }
-  ];
+  $scope.formFields = [{
+    key: 'title',
+    type: 'text',
+    label: gettextCatalog.getString('Title'),
+    required: true
+  }, {
+    key: 'body',
+    type: 'textarea',
+    label: gettextCatalog.getString('Body'),
+    required: true
+  }];
 
   $scope.formOptions = {
     uniqueFormId: true,
@@ -64,13 +22,25 @@ angular.module ('com.module.notes')
     submitCopy: 'Save'
   };
 
-  $scope.onSubmit = function () {
-    Note.upsert ($scope.note, function () {
-      toasty.pop.success ({title: 'Note saved', msg: 'Your note is safe with us!', sound: false});
-      $state.go ('^.list');
-    }, function (err) {
-      console.log (err);
+  $scope.delete = function(id) {
+    NotesService.deleteNote(id, function() {
+      $scope.notes = NotesService.getNotes();
     });
   };
+
+  $scope.onSubmit = function() {
+    NotesService.upsertNote($scope.note, function() {
+      $scope.notes = NotesService.getNotes();
+      $state.go('^.list');
+    });
+  };
+
+  $scope.notes = NotesService.getNotes();
+
+  if ($stateParams.id) {
+    $scope.note = NotesService.getNote($stateParams.id);
+  } else {
+    $scope.note = {};
+  }
 
 });
